@@ -82,14 +82,22 @@ func Run(ctx context.Context, cfg *config.Config) error {
 		return fmt.Errorf("No host keys could be loaded, aborting")
 	}
 
+	go listenToConns(ctx, sshListener, cfg, sshCfg)
+
+        <-ctx.Done()
+
+	return nil
+}
+
+func listenToConns(ctx context.Context, l net.Listener, cfg *config.Config, sshCfg *ssh.ServerConfig) {
 	for {
-		nconn, err := sshListener.Accept()
+		nconn, err := l.Accept()
 		if err != nil {
 			log.Warnf("Failed to accept connection: %v\n", err)
 			continue
 		}
 
-		go handleConn(ctx, cfg, sshCfg, nconn)
+		handleConn(ctx, cfg, sshCfg, nconn)
 	}
 }
 
